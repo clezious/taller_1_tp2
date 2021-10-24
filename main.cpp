@@ -26,7 +26,7 @@ void processTask(DatasetTaskResults& results,
     if (operation == "min"){
         result = dataset.column_min(column);
     }
-    results.update(task_id, result, (row_end - row_start),operation);    
+    results.update(task_id, result, dataset.row_count(),operation);    
 }
 
 // Genera un vector cuyas entradas son las sub-string presentes 

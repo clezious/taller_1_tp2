@@ -45,8 +45,8 @@ std::vector<std::string> split(std::string string, std::string delimiter){
 }
 
 int main(int argc, char const *argv[]){
-    std::cout << argv[1] << '\n';    
-    Dataset dataset(argv[1],strtol(argv[2],NULL,10),0,15);   
+    // std::cout << argv[1] << '\n';    
+    // Dataset dataset(argv[1],strtol(argv[2],NULL,10),0,15);   
     // dataset.print();         
     DatasetTaskResults results;
     long task_id = 0;

@@ -25,7 +25,6 @@ void DatasetTaskResults::update(const unsigned long task_id,
 }
 
 void DatasetTaskResults::print(){    
-    std::cout << "Results:\n";
     for (size_t i = 0; i < this->results.size(); i++){
         if (task_operations[i] == "mean"){
             std::cout << results[i][0] << '/' << results[i][1] << '\n';

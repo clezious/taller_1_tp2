@@ -1,6 +1,7 @@
 
 #include <string>
 #include "iostream"
+#include "vector"
 #include "dataset.h"
 #include "dataset_task_results.h"
 
@@ -28,8 +29,8 @@ void processTask(DatasetTaskResults& results,
     results.update(task_id, result, (row_end - row_start),operation);    
 }
 
-// Genera un vector cuyas entradas son las sub-string presentes en la string dada,
-// separadas por la string delimitadora.
+// Genera un vector cuyas entradas son las sub-string presentes 
+// en la string dada, separadas por la string delimitadora.
 std::vector<std::string> split(std::string string, std::string delimiter){
     std::vector<std::string> split;
     int start_pos = 0;
@@ -58,8 +59,9 @@ int main(int argc, char const *argv[]){
         for (unsigned long partition_start = start_row;
              partition_start < end_row;
              partition_start += partition_size){
-            unsigned long partition_end = partition_start + partition_size;
-            if(partition_end > end_row){
+            unsigned long partition_end = partition_start + 
+                                          partition_size;
+            if (partition_end > end_row){
                 partition_end = end_row;
             }             
             processTask(results,

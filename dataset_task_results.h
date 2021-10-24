@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include <string>
 class DatasetTaskResults{
 private:
     std::map<long,std::vector<long>> results;    

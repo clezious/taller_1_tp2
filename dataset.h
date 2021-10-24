@@ -5,7 +5,7 @@
 #include <fstream>
 class Dataset{
     private:
-        std::ifstream file;
+        const char * path;
         long columns;
         unsigned long row_start;
         unsigned long row_end;
@@ -15,8 +15,7 @@ class Dataset{
         Dataset(const char * path, 
                 const long columns, 
                 const unsigned long row_start, 
-                const unsigned long row_end);
-        ~Dataset();
+                const unsigned long row_end);        
         void print();
 
         // Calcula la suma de todos los valores en la columna indicada

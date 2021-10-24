@@ -6,14 +6,11 @@
 Dataset::Dataset(const char * path,
                  const long columns,
                  const unsigned long row_start,
-                 const unsigned long row_end) 
-                 : file(path, std::ifstream::in){    
+                 const unsigned long row_end){    
+    this->path = path;
     this->columns = columns;
     this->row_start = row_start;
     this->row_end = row_end;
-}
-
-Dataset::~Dataset(){    
 }
 
 std::vector<uint16_t> Dataset::load(){
@@ -21,12 +18,13 @@ std::vector<uint16_t> Dataset::load(){
                                   this->columns * 
                                   (this->row_end - this->row_start);        
     std::vector<uint16_t> buffer(bytes_to_read);
+    std::ifstream file(this->path, std::ifstream::in);
     // Se posiciona el puntero en la fila inicial
     unsigned long start_point = this->columns * 
                                 this->row_start * 
                                 sizeof(uint16_t);
-    this->file.seekg(start_point);
-    this->file.read((char *) buffer.data(), bytes_to_read);
+    file.seekg(start_point);
+    file.read((char *) buffer.data(), bytes_to_read);
     return buffer;
 }
 
@@ -74,17 +72,8 @@ long Dataset::column_min(const long column){
     return min;
 }
 
-void Dataset::print(){
-    unsigned long bytes_to_read = sizeof(uint16_t) * 
-                                  this->columns * 
-                                  (this->row_end - this->row_start);        
-    uint16_t * buffer = (uint16_t *) malloc(bytes_to_read);
-    // Se posiciona el puntero en la fila inicial
-    unsigned long start_point = this->columns *
-                                this->row_start *
-                                sizeof(uint16_t);
-    this->file.seekg(start_point);
-    this->file.read((char *) buffer, bytes_to_read);    
+void Dataset::print(){        
+    std::vector<uint16_t> buffer = this->load();
     for (size_t i = 0;
          i < this->columns * (this->row_end - this->row_start);
          i++){
@@ -92,6 +81,5 @@ void Dataset::print(){
         if ((i+1) % this->columns == 0){
             std::cout << "\n";
         }
-    }
-    free(buffer);    
+    }    
 }

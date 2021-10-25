@@ -54,7 +54,7 @@ Que como se mencionó, guarda en un `std::vector` de `<uint16_t>` (que es el tí
 ## DatasetTaskResults
 Por consigna se pide que los resultados parciales de las tareas a realizar sobre el *dataset* de un archivo se guarden en un objeto compartido, en el que cada hilo pueda actualizar el resultado de la operación que está realizando. De esta forma, se genera una *Race Condition* que debemos resolver. Este es el rol de DatasetTaskResults.  
 Internamente, no es más que un `std::map` que asocia una *operation_id*, que identifica una operación a realizar sobre el dataset (Es decir, cada una de las operaciónes que se ingresan por *stdin* al programa), con un `std::vector` en el que se almacena el resultado parcial de la operación y la cantidad de filas hasta el momento procesadas. Además existe otro `std::map` que asocia cada *operation_id* con el típo de operación que representa (`"sum","mean","max" o "min"`).  
-Por último, posee un `mutex`, que utilizará para resolver la *Race Condition* anteriormente mencionada.  
+Por último, posee un `std::mutex`, que utilizará para resolver la *Race Condition* anteriormente mencionada.  
 Sus únicos métodos son `update()` que se utiliza para actualizar el resultado parcial de una operación (o agregarlo si aún no existe), y `print()` que imprime los resultados en el formato requerido por consigna.  
 Se muestra a continuación la implementación de `update()`:
 ```cpp
@@ -80,7 +80,7 @@ void DatasetTaskResults::update(const unsigned long operation_id,
     }
 }
 ```
-En donde se destaca la utilización del `mutex` en un `std::unique_lock` que abarcará toda la ejecuciónd el método, impidiendo de esta forma que dos hilos intenten insertar o actualizar un resultado parcial al mismo tiempo.
+En donde se destaca la utilización del `std::mutex` en un `std::unique_lock` que abarcará toda la ejecuciónd el método, impidiendo de esta forma que dos hilos intenten insertar o actualizar un resultado parcial al mismo tiempo.
 
 ## DatasetTask
 Representa una tarea a realizar sobre un `Dataset`, que puede o no ser una partición de un *dataset* presente en un archivo.  
@@ -107,7 +107,37 @@ void DatasetTask::process(){
 ```
 Simplemente se encarga de obtener el resultado de la tarea sobre el `Dataset`, y luego actualizar el mismo en el objeto compartido `DatasetTaskResults` .  
 ## DatasetTaskQueue
-Como se quiere que las tareas sobre el *dataset* puedan realizarse de forma concurrente por varios hilos, mientras un hilo principal lee de entrada estandar y las genera, debemos implementar una cola de tareas *Thread Safe* y además *Bloqueante*, pues puede pasar que el thread principal genere las tareas a realizar con menor velocidad que lo que tardan los threads que las realizan en procesarlas, en cuyo caso estos deben esperar hasta que haya una nueva tarea disponible.
+Como se quiere que las tareas sobre el *dataset* puedan realizarse de forma concurrente por varios hilos, mientras un hilo principal lee de entrada estandar y las genera, debemos implementar una cola de tareas *Thread Safe* y además *Bloqueante*, pues puede pasar que el hilo principal genere las tareas a realizar con menor velocidad que lo que tardan los hilos que las realizan en procesarlas, en cuyo caso estos deben esperar hasta que haya una nueva tarea disponible.  
+Internamente, `DatasetTaskQueue` hace uso de una `std::queue`, un `std::mutex` para evitar *Race Conditions* entre los hilos de forma similar a lo que ocurría con el objeto compartido `DatasetTaskResults`, y una `std::condition_variable` para resolver el problema de la espera de los hilos consumidores hasta que haya una nueva tarea disponible.  
+Al mismo tiempo, es necesario tener una forma de indicar que la cola ya no recibirá más tareas (se "cerró") porque el hilo principal ya dejó de generarlas. Esto se consigue con una variable booleana `open` que por defecto es verdadera, y su correspondiente método `close()` para cerrarla.  
+Los métodos que hacen uso del *mutex* con un `std::unique_lock` para evitar las race conditions son `close()`, `push()` y de `pop()` .  
+A continuación se muestra la implementación de `push()` y `pop()`:  
+```cpp
+void DatasetTaskQueue::push(DatasetTask task){
+    std::unique_lock<std::mutex> unique_lock(this->mutex);    
+    this->queue.push(task);
+    this->condition_variable.notify_all();    
+} 
+DatasetTask DatasetTaskQueue::pop(){
+    std::unique_lock<std::mutex> unique_lock(this->mutex);
+    while (this->empty()){        
+        if (!this->is_open()){
+            throw -1;
+        }
+        this->condition_variable.wait(unique_lock);
+    }
+    DatasetTask task = this->queue.front();
+    this->queue.pop();
+        
+    return task;
+} 
+```
+Donde se destaca cómo la *condition_variable* en `push()` se utiliza para notificar a todos los hilos que se agregó una tarea a la cola, mientras que en su contraparte `pop()` se utiliza para esperar a que haya una nueva tarea disponible.  
+Además, debe verificarse al hacer `pop()` que la cola no esté vacía y además cerrada, ya que esto indicaría que se terminaron de procesar todas las tareas. En ese caso se lanza una excepción, y los hilos consumidores la atraparán para finalizar el procesamiento.
+
+## main
+Por último, en la el archivo *main* se encuentra la lógica de procesamiento de los argumentos y comandos recibidos por entrada estandar, así como la creación (de ser necesario) de los hilos (con su función procesadora de tareas `process_tasks()`), del objecto compartido de resultados, y de las tareas a realizar.  
+
 
 
 

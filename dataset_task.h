@@ -20,7 +20,7 @@ class DatasetTask{
                     unsigned long row_end,                  
                     unsigned long total_columns, 
                     unsigned long column,
-                    std::string operation);
+                    const std::string& operation);
         void process();
 };
 #endif

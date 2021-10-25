@@ -9,7 +9,7 @@ DatasetTask::DatasetTask(DatasetTaskResults& results,
                          unsigned long row_end,                  
                          unsigned long total_columns, 
                          unsigned long column,
-                         std::string operation): 
+                         const std::string& operation): 
                             results(results),
                             dataset(dataset_path, total_columns,
                                     row_start, row_end),

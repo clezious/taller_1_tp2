@@ -4,11 +4,12 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <mutex>
 class DatasetTaskResults{
 private:
     std::map<long,std::vector<long>> results;    
-    // const std::map<std::string,long> operation_id_map;
     std::map<long,std::string> task_operations;
+    std::mutex mutex;
 public:    
     void update(const unsigned long task_id, 
                 const long result, 

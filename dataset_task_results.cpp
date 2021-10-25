@@ -1,6 +1,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <mutex>
 #include "iostream"
 #include "dataset_task_results.h"
 
@@ -8,6 +9,7 @@ void DatasetTaskResults::update(const unsigned long task_id,
                                 const long result, 
                                 const long processed_rows, 
                                 std::string operation){
+    std::unique_lock<std::mutex> unique_lock(this->mutex);
     if (this->results.find(task_id) != this->results.end()){
         this->results[task_id][1] += processed_rows;        
         if (operation == "sum" || operation == "mean"){
@@ -26,10 +28,11 @@ void DatasetTaskResults::update(const unsigned long task_id,
 
 void DatasetTaskResults::print(){    
     for (size_t i = 0; i < this->results.size(); i++){
-        if (task_operations[i] == "mean"){
-            std::cout << results[i][0] << '/' << results[i][1] << '\n';
+        if (this->task_operations[i] == "mean"){
+            std::cout << this->results[i][0] 
+            << '/' << this->results[i][1] << '\n';
         } else {
-            std::cout << results[i][0] << '\n';
+            std::cout << this->results[i][0] << '\n';
         }
     }
 }

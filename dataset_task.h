@@ -21,6 +21,7 @@ class DatasetTask{
                     unsigned long total_columns, 
                     unsigned long column,
                     const std::string& operation);
+        // Resuelve el task
         void process();
 };
 #endif

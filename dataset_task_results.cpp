@@ -5,24 +5,27 @@
 #include "iostream"
 #include "dataset_task_results.h"
 
-void DatasetTaskResults::update(const unsigned long task_id, 
+void DatasetTaskResults::update(const unsigned long operation_id, 
                                 const long result, 
                                 const long processed_rows, 
                                 std::string operation){
     std::unique_lock<std::mutex> unique_lock(this->mutex);
-    if (this->results.find(task_id) != this->results.end()){
-        this->results[task_id][1] += processed_rows;        
+    //Si la operation_id ya está en el mapa, actualiza. Si no, inserta.
+    if (this->results.find(operation_id) != this->results.end()){
+        this->results[operation_id][1] += processed_rows;        
         if (operation == "sum" || operation == "mean"){
-            this->results[task_id][0] += result;
-        } else if (operation == "max" && result > this->results[task_id][0]){
-            this->results[task_id][0] = result;                 
-        } else if (operation == "min" && result < this->results[task_id][0]){
-                this->results[task_id][0] = result;
+            this->results[operation_id][0] += result;
+        } else if (operation == "max" 
+                   && result > this->results[operation_id][0]){
+            this->results[operation_id][0] = result;                 
+        } else if (operation == "min" 
+                   && result < this->results[operation_id][0]){
+                this->results[operation_id][0] = result;
         }
     } else {
         std::vector<long> vector({result,processed_rows});
-        this->results.insert({task_id,vector});
-        this->task_operations.insert({task_id,operation});
+        this->results.insert({operation_id,vector});
+        this->task_operations.insert({operation_id,operation});
     }
 }
 

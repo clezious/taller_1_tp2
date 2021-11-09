@@ -9,7 +9,8 @@ El programa consiste en un implementación de la técnica *Split-Apply-Combine* 
 Al mismo tiempo, esta implementación soporta la utilización de multiples hilos, que permitirán procesar varias particiones de forma concurrente.
 
 # Clases
-Para la resolución del problema, se implementan algunas clases, que pueden verse en el siguiente diagrama (simplificado):
+Para la resolución del problema, se implementan algunas clases, que pueden verse en el siguiente diagrama (simplificado):  
+
 ![Diagrama de Clases](./img/diagrama_clases.png)  
 
 A continuación, un resumen, métodos principales e interacciones de cada una de ellas: 
@@ -118,7 +119,7 @@ A continuación se muestra la implementación de `push()` y `pop()`:
 ```cpp
 void DatasetTaskQueue::push(DatasetTask task){
     std::unique_lock<std::mutex> unique_lock(this->mutex);    
-    this->queue.push(task);
+    this->queue.push(std::move(task));
     this->condition_variable.notify_all();    
 } 
 DatasetTask DatasetTaskQueue::pop(){
@@ -163,7 +164,8 @@ Se encarga de "orquestrar" la ejecución del programa, es decir:
 - Imprimir los resultados
 
 Para esto, posee un `std::vector` de `WorkerThread`, la cola de tareas y el objeto compartido de resultados.  
-El siguiente diagrama intenta ilustrar el bucle principal de generación y procesamiento de tareas que maneja el `Orchestrator`:
+El siguiente diagrama intenta ilustrar el bucle principal de generación y procesamiento de tareas que maneja el `Orchestrator`:  
+
 ![Bucle Proceso Tasks](./img/bucle_proceso_tasks.png)  
   
 Una de sus funciones más importantes, `Orchestrator::process_commands()`:

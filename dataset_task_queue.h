@@ -14,7 +14,6 @@ private:
     bool open;
 public:
     DatasetTaskQueue();
-    bool is_open();
     bool empty();
     void close();
     void push(DatasetTask task);

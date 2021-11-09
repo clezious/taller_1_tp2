@@ -4,11 +4,8 @@
 DatasetTaskQueue::DatasetTaskQueue(): 
                             queue(),
                             open(true){}
-
-bool DatasetTaskQueue::is_open(){
-    return this->open;
-} 
 bool DatasetTaskQueue::empty(){
+    std::unique_lock<std::mutex> unique_lock(this->mutex);
     return this->queue.empty();
 } 
 void DatasetTaskQueue::close(){
@@ -24,7 +21,7 @@ void DatasetTaskQueue::push(DatasetTask task){
 DatasetTask DatasetTaskQueue::pop(){
     std::unique_lock<std::mutex> unique_lock(this->mutex);
     while (this->empty()){        
-        if (!this->is_open()){
+        if (!this->open){
             throw -1;
         }
         this->condition_variable.wait(unique_lock);

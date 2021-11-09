@@ -1,5 +1,5 @@
-#ifndef __DATASET_H__
-#define __DATASET_H__
+#ifndef __ORCHESTRATOR_H__
+#define __ORCHESTRATOR_H__
 
 #include <string>
 #include <iostream>

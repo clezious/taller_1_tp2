@@ -8,7 +8,7 @@
 void DatasetTaskResults::update(const unsigned long operation_id, 
                                 const long result, 
                                 const long processed_rows, 
-                                std::string operation){
+                                const std::string& operation){
     std::unique_lock<std::mutex> unique_lock(this->mutex);
     //Si la operation_id ya está en el mapa, actualiza. Si no, inserta.
     if (this->results.find(operation_id) != this->results.end()){
@@ -29,7 +29,8 @@ void DatasetTaskResults::update(const unsigned long operation_id,
     }
 }
 
-void DatasetTaskResults::print(){    
+void DatasetTaskResults::print(){
+    std::unique_lock<std::mutex> unique_lock(this->mutex);
     for (size_t i = 0; i < this->results.size(); i++){
         if (this->task_operations[i] == "mean"){
             std::cout << this->results[i][0] 

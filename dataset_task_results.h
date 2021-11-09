@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <mutex>
-class DatasetTaskResults{
+class DatasetTaskResults {
 private:
     std::map<long,std::vector<long>> results;    
     std::map<long,std::string> task_operations;
@@ -14,7 +14,7 @@ public:
     void update(const unsigned long operation_id, 
                 const long result, 
                 const long processed_rows, 
-                std::string operation);   
+                const std::string& operation);   
     void print();
 };
 #endif

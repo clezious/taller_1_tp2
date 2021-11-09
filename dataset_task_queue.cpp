@@ -1,5 +1,6 @@
-#include <mutex>
 #include "dataset_task_queue.h"
+#include <mutex>
+#include <utility>
 
 DatasetTaskQueue::DatasetTaskQueue(): 
                             queue(),

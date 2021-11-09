@@ -18,6 +18,16 @@ DatasetTask::DatasetTask(DatasetTaskResults& results,
                             column(column),
                             operation(operation){}
 
+DatasetTask::DatasetTask(DatasetTask&& other):
+                        results(other.results),
+                        dataset(other.dataset),
+                        operation(other.operation){
+    this->command_id = other.command_id;
+    other.command_id = -1;    
+    this->column = other.column;
+    other.column = -1;
+}
+
 void DatasetTask::process(){
     long result = 0;
     if (this->operation == "sum" || this->operation == "mean"){

@@ -4,7 +4,7 @@
 DatasetTaskQueue::DatasetTaskQueue(): 
                             queue(),
                             open(true){}
-                            
+
 void DatasetTaskQueue::close(){
     std::unique_lock<std::mutex> unique_lock(this->mutex);    
     this->open = false;
@@ -12,7 +12,7 @@ void DatasetTaskQueue::close(){
 } 
 void DatasetTaskQueue::push(DatasetTask task){
     std::unique_lock<std::mutex> unique_lock(this->mutex);    
-    this->queue.push(task);
+    this->queue.push(std::move(task));
     this->condition_variable.notify_all();    
 } 
 DatasetTask DatasetTaskQueue::pop(){
@@ -23,7 +23,7 @@ DatasetTask DatasetTaskQueue::pop(){
         }
         this->condition_variable.wait(unique_lock);
     }
-    DatasetTask task = this->queue.front();
+    DatasetTask task = std::move(this->queue.front());
     this->queue.pop();        
     return task;
 } 

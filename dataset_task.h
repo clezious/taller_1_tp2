@@ -21,6 +21,12 @@ class DatasetTask{
                     unsigned long total_columns, 
                     unsigned long column,
                     const std::string& operation);
+                    
+        //No se permite la copia.
+        DatasetTask(const DatasetTask& other) = delete;
+        DatasetTask& operator=(const DatasetTask& other) = delete;
+        //Pero sí el Movimiento
+        DatasetTask(DatasetTask&& other);
         // Resuelve el task
         void process();
 };

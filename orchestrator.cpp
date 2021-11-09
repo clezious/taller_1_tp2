@@ -1,4 +1,6 @@
 #include "orchestrator.h"
+#include <string>
+#include <vector>
 
 void process_tasks(DatasetTaskQueue& tasks_queue){
    while (true){        
@@ -17,7 +19,8 @@ Orchestrator::Orchestrator(const char * dataset_path,
                            dataset_columns(dataset_columns){ 
     //Inicialización de threads 
     for (unsigned long i = 0; i < threads_number - 1; i++){        
-        this->threads.push_back(std::thread(process_tasks,std::ref(this->tasks_queue)));        
+        this->threads.push_back(std::thread(process_tasks,
+                                            std::ref(this->tasks_queue)));
     }
 }
 void Orchestrator::print_results(){ 
@@ -69,7 +72,7 @@ void Orchestrator::add_task(unsigned long start_row,
         DatasetTask task(results,command_id,dataset_path,
                             partition_start,partition_end,
                             dataset_columns,column,operation);
-        this->tasks_queue.push(task);
+        this->tasks_queue.push(std::move(task));
     }
 }
 

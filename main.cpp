@@ -8,6 +8,7 @@
 #include "dataset_task_results.h"
 #include "dataset_task_queue.h"
 
+
 // Genera un vector cuyas entradas son las sub-string presentes 
 // en la string dada, separadas por la string delimitadora.
 std::vector<std::string> split(std::string string, std::string delimiter){
@@ -23,29 +24,48 @@ std::vector<std::string> split(std::string string, std::string delimiter){
     return split;
 }
 
-void process_tasks(DatasetTaskQueue& task_queue){
-   while (!(task_queue.empty() && !task_queue.is_open())){        
-        try{
-            task_queue.pop().process();
-        }
-        catch(const std::exception& e){}        
+void process_tasks(DatasetTaskQueue& tasks_queue){
+   while (true){        
+        try {
+            tasks_queue.pop().process();
+        } catch(...){
+            break;
+        }        
     }
 }
 
-int main(int argc, char const *argv[]){           
+
+class Orchestrator{
+private:
+    const char * dataset_path;
+    const long dataset_columns;    
     DatasetTaskResults results;
-    const char * dataset_path = argv[1];
-    const long dataset_columns = strtol(argv[2],NULL,10);
-    long command_id = 0;
-    
-    DatasetTaskQueue task_queue;
-
-    const unsigned long threads_number = strtol(argv[3],NULL,10);
+    DatasetTaskQueue tasks_queue;
     std::vector<std::thread> threads;
-    for (unsigned long i = 0; i < threads_number-1; i++){
-        threads.push_back(std::thread(process_tasks,std::ref(task_queue)));
-    }
+public:
+    Orchestrator(const char * dataset_path,
+                 const long dataset_columns,
+                 const unsigned long threads_number);
+    ~Orchestrator();
+    void process_commands();
+};
 
+Orchestrator::Orchestrator(const char * dataset_path,
+                           const long dataset_columns,
+                           const unsigned long threads_number):
+                           dataset_path(dataset_path),
+                           dataset_columns(dataset_columns){ 
+    //Inicialización de threads 
+    for (unsigned long i = 0; i < threads_number - 1; i++){        
+        this->threads.push_back(std::thread(process_tasks,std::ref(this->tasks_queue)));
+    }
+}
+
+Orchestrator::~Orchestrator(){
+}
+
+void Orchestrator::process_commands(){
+    long command_id = 0;    
     for (std::string line; std::getline(std::cin, line);) {
         std::vector<std::string> command = split(line," ");
         unsigned long start_row = std::stol(command[0]);
@@ -64,16 +84,22 @@ int main(int argc, char const *argv[]){
             DatasetTask task(results,command_id,dataset_path,
                              partition_start,partition_end,
                              dataset_columns,column,command[4]);
-            task_queue.push(task);
+            this->tasks_queue.push(task);
         }
         command_id ++;
     }
-    task_queue.close();
-    process_tasks(task_queue);
+    this->tasks_queue.close();
+    process_tasks(this->tasks_queue);
     for (size_t i = 0; i < threads.size(); i++){
         threads[i].join();
-    }
-    
+    }    
     results.print();
+}
+
+int main(int argc, char const *argv[]){
+    Orchestrator orchestrator(argv[1],
+                              strtol(argv[2],NULL,10),
+                              strtol(argv[3],NULL,10));    
+    orchestrator.process_commands();
     return 0;
 }

@@ -30,7 +30,6 @@ DatasetTask DatasetTaskQueue::pop(){
         this->condition_variable.wait(unique_lock);
     }
     DatasetTask task = this->queue.front();
-    this->queue.pop();
-        
+    this->queue.pop();        
     return task;
 } 

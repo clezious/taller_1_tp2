@@ -3,26 +3,12 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <sstream>
+#include <tuple>
 #include "dataset.h"
 #include "dataset_task.h"
 #include "dataset_task_results.h"
 #include "dataset_task_queue.h"
-
-
-// Genera un vector cuyas entradas son las sub-string presentes 
-// en la string dada, separadas por la string delimitadora.
-std::vector<std::string> split(std::string string, std::string delimiter){
-    std::vector<std::string> split;
-    int start_pos = 0;
-    int end_pos = string.find(delimiter);
-    while (end_pos != -1) {
-        split.push_back(string.substr(start_pos, end_pos - start_pos));
-        start_pos = end_pos + delimiter.size();
-        end_pos = string.find(delimiter, start_pos);
-    }
-    split.push_back(string.substr(start_pos, end_pos - start_pos));
-    return split;
-}
 
 void process_tasks(DatasetTaskQueue& tasks_queue){
    while (true){        
@@ -34,7 +20,6 @@ void process_tasks(DatasetTaskQueue& tasks_queue){
     }
 }
 
-
 class Orchestrator{
 private:
     const char * dataset_path;
@@ -45,9 +30,13 @@ private:
 public:
     Orchestrator(const char * dataset_path,
                  const long dataset_columns,
-                 const unsigned long threads_number);
-    ~Orchestrator();
+                 const unsigned long threads_number);    
     void process_commands();
+    std::tuple <unsigned long,
+                unsigned long,
+                unsigned long,
+                unsigned long,
+                std::string> parse_command(const std::string& command);
 };
 
 Orchestrator::Orchestrator(const char * dataset_path,
@@ -61,18 +50,39 @@ Orchestrator::Orchestrator(const char * dataset_path,
     }
 }
 
-Orchestrator::~Orchestrator(){
+std::tuple <unsigned long,
+            unsigned long,
+            unsigned long,
+            unsigned long,
+            std::string> 
+            Orchestrator::parse_command(const std::string& command){
+    std::stringstream stream(command);
+    std::string token;   
+    std::vector<std::string> vector;
+    for (int i = 0; i < 5; i++){
+        char delimiter = i == 4 ? '\n' : ' ';
+        if (! std::getline(stream, token, delimiter)){
+            break;
+        }
+        vector.push_back(token);
+    }
+    return std::tuple<unsigned long,
+                    unsigned long,
+                    unsigned long,
+                    unsigned long,
+                    std::string>(std::stol(vector[0]),std::stol(vector[1]),
+                                std::stol(vector[2]),std::stol(vector[3]),
+                                vector[4]);
 }
 
 void Orchestrator::process_commands(){
     long command_id = 0;    
-    for (std::string line; std::getline(std::cin, line);) {
-        std::vector<std::string> command = split(line," ");
-        unsigned long start_row = std::stol(command[0]);
-        unsigned long end_row = std::stol(command[1]);
-        unsigned long partition_size = std::stol(command[2]);
-        unsigned long column = std::stol(command[3]);
-        
+    for (std::string line; std::getline(std::cin, line);) {                
+        unsigned long start_row, end_row, partition_size, column;
+        std::string operation;
+        std::tie(start_row, end_row, 
+                 partition_size, column, 
+                 operation) = this->parse_command(line);        
         for (unsigned long partition_start = start_row;
              partition_start < end_row;
              partition_start += partition_size){
@@ -83,7 +93,7 @@ void Orchestrator::process_commands(){
             }
             DatasetTask task(results,command_id,dataset_path,
                              partition_start,partition_end,
-                             dataset_columns,column,command[4]);
+                             dataset_columns,column,operation);
             this->tasks_queue.push(task);
         }
         command_id ++;

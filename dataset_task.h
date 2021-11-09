@@ -7,10 +7,17 @@
 
 class DatasetTask{    
     private:
+        // Lugar de almacenamiento de los resultados totales
+        // Los resultados parciales de este task se almacenarán 
+        // allí una vez resuelto
         DatasetTaskResults& results;
+        // El dataset sobre el que se realizará la tarea
         Dataset dataset;
+        // Identificador del comando asociado con esta tarea.
         unsigned long command_id; 
+        // La columna del dataset sobre la que debe realizrse la tarea
         unsigned long column; 
+        // El tipo de operación que se realizará sobre la columna del dataset
         const std::string operation;
     public:
         DatasetTask(DatasetTaskResults& results,

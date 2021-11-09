@@ -12,12 +12,6 @@ Orchestrator::Orchestrator(const char * dataset_path,
         this->workers.push_back(WorkerThread(std::ref(this->tasks_queue)));
     }
 }
-Orchestrator::~Orchestrator(){ 
-    // Al terminar, joinea los hilos worker 
-    for (size_t i = 0; i < this->workers.size(); i++){
-        this->workers[i].join();
-    } 
-}
 
 void Orchestrator::add_task(unsigned long start_row, 
                             unsigned long end_row, 
@@ -81,6 +75,12 @@ void Orchestrator::process_remaining_tasks(){
         }        
     } 
 }
+void Orchestrator::join_workers(){
+    // Joinea los hilos worker 
+    for (size_t i = 0; i < this->workers.size(); i++){
+        this->workers[i].join();
+    }
+}
 
 void Orchestrator::print_results(){ 
     this->results.print();
@@ -89,5 +89,6 @@ void Orchestrator::print_results(){
 void Orchestrator::run(){    
     this->process_commands();
     this->process_remaining_tasks();
+    this->join_workers();
     this->print_results();
 }

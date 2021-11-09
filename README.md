@@ -9,7 +9,10 @@ El programa consiste en un implementación de la técnica *Split-Apply-Combine* 
 Al mismo tiempo, esta implementación soporta la utilización de multiples hilos, que permitirán procesar varias particiones de forma concurrente.
 
 # Clases
-Para la resolución del problema, se implementan algunas clases, cuyo resumen, métodos principales e interacciones se detallan a continuación: 
+Para la resolución del problema, se implementan algunas clases, que pueden verse en el siguiente diagrama (simplificado):
+![Diagrama de Clases](./img/diagrama_clases.png)  
+
+A continuación, un resumen, métodos principales e interacciones de cada una de ellas: 
 
 ## Dataset
 Representa un *dataset*, o una partición de un *dataset*.  
@@ -120,24 +123,77 @@ void DatasetTaskQueue::push(DatasetTask task){
 } 
 DatasetTask DatasetTaskQueue::pop(){
     std::unique_lock<std::mutex> unique_lock(this->mutex);
-    while (this->empty()){        
-        if (!this->is_open()){
+    while (this->queue.empty()){        
+        if (!this->open){
             throw -1;
         }
         this->condition_variable.wait(unique_lock);
     }
-    DatasetTask task = this->queue.front();
-    this->queue.pop();
-        
+    DatasetTask task = std::move(this->queue.front());
+    this->queue.pop();        
     return task;
 } 
 ```
 Donde se destaca cómo la *condition_variable* en `push()` se utiliza para notificar a todos los hilos que se agregó una tarea a la cola, mientras que en su contraparte `pop()` se utiliza para esperar a que haya una nueva tarea disponible.  
 Además, debe verificarse al hacer `pop()` que la cola no esté vacía y además cerrada, ya que esto indicaría que se terminaron de procesar todas las tareas. En ese caso se lanza una excepción, y los hilos consumidores la atraparán para finalizar el procesamiento.
 
-## main
-Por último, en la el archivo *main* se encuentra la lógica de procesamiento de los argumentos y comandos recibidos por entrada estandar, así como la creación (de ser necesario) de los hilos (con su función procesadora de tareas `process_tasks()`), del objecto compartido de resultados, y de las tareas a realizar.  
+## WorkerThread
+Representa un hilo cuya finalidad es la de procesar las tareas de la cola de tareas hasta que estas se acaben y la cola se cierre.  
+La cantidad de instancias de esta clase estará determinada por parámetro al momento de ejecutar el programa.  
+Al momento de construirse, se lanza un `std::thread` que ejecuta la función `process_tasks()`:
+```cpp
+void WorkerThread::process_tasks(){
+    while (true){        
+        try {
+            this->tasks_queue.pop().process();
+        } catch(...){
+            break;
+        }        
+    }
+}
+```
+Que simplemente desencola tareas de la cola bloqueante de tareas y las procesa. Cuando la cola de tareas esté vacia y cerrada, lanzará una excepción y el bucle terminará.
 
+## Orchestrator
+Se encarga de "orquestrar" la ejecución del programa, es decir:
+- Crear los `WorkerThread` indicados por parámetro.
+- Procesar los comandos recibidos por entrada estandar y crear las tareas correspondientes a ellos.
+- "Ayudar" a los hilos worker a terminar de procesar las tareas restantes cuando ya no hay más comandos que recibir.
+- Esperar (*Joinear*) a que los hilos worker terminen de procesar sus tareas.
+- Imprimir los resultados
+
+Para esto, posee un `std::vector` de `WorkerThread`, la cola de tareas y el objeto compartido de resultados.  
+El siguiente diagrama intenta ilustrar el bucle principal de generación y procesamiento de tareas que maneja el `Orchestrator`:
+![Bucle Proceso Tasks](./img/bucle_proceso_tasks.png)  
+  
+Una de sus funciones más importantes, `Orchestrator::process_commands()`:
+```cpp
+void Orchestrator::process_commands(){    
+    long command_id = 0;
+    for (std::string line; std::getline(std::cin, line);) {                
+        unsigned long start_row, end_row, partition_size, column;
+        std::string operation;
+        std::tie(start_row, end_row, 
+                 partition_size, column, 
+                 operation) = this->parse_command(line);        
+        this->add_task(start_row, end_row, 
+                       partition_size, column, 
+                       operation, command_id);        
+        command_id ++;
+    }    
+    this->tasks_queue.close();  
+}
+```
+es la encargada de recibir por `std::cin` los comandos con las tareas a realizar, parsearlos para obtener cada uno de sus parámetros, y luego crear una tarea a partir de ellos para finalmente agregarla a la cola.  
+Y para finalizar, la función principal de la clase, `Orchestrator::run()`, con el desarrollo ordenado del programa que se comentó anteriormente, esta vez de forma explicita:
+```cpp
+void Orchestrator::run(){    
+    this->process_commands();
+    this->process_remaining_tasks();
+    this->join_workers();
+    this->print_results();
+}
+```
 
 
 

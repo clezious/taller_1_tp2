@@ -63,14 +63,16 @@ class Orchestrator{
         // es la única forma de procesarlos. Si no, simplemente
         // ayuda a los hilos workers a terminar.
         void process_remaining_tasks();
+        //Hace join a los hilos worker
+        void join_workers();
         // Imprime los resultados almacenados en "results"
         void print_results();
+        
         
     public:
         Orchestrator(const char * dataset_path,
                     const long dataset_columns,
-                    const unsigned long threads_number);
-        ~Orchestrator();
+                    const unsigned long threads_number);        
         // Función principal. 
         //Ejecuta los pasos necesarios para el funcionamiento del programa.
         void run();

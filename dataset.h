@@ -20,6 +20,7 @@ class Dataset{
         unsigned long row_end;
         //Carga el dataset del archivo en memoria dentro de un Vector
         std::vector<uint16_t> load();
+        
     public:
         Dataset(const char * path, 
                 const long columns, 

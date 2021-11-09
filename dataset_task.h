@@ -19,6 +19,7 @@ class DatasetTask{
         unsigned long column; 
         // El tipo de operación que se realizará sobre la columna del dataset
         const std::string operation;
+        
     public:
         DatasetTask(DatasetTaskResults& results,
                     unsigned long command_id,                    

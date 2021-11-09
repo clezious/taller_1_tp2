@@ -17,7 +17,7 @@ Orchestrator::Orchestrator(const char * dataset_path,
                            dataset_columns(dataset_columns){ 
     //Inicialización de threads 
     for (unsigned long i = 0; i < threads_number - 1; i++){        
-        this->threads.push_back(std::thread(process_tasks,std::ref(this->tasks_queue)));
+        this->threads.push_back(std::thread(process_tasks,std::ref(this->tasks_queue)));        
     }
 }
 void Orchestrator::print_results(){ 
@@ -73,7 +73,7 @@ void Orchestrator::add_task(unsigned long start_row,
     }
 }
 
-void Orchestrator::process_commands(){
+void Orchestrator::process_commands(){    
     long command_id = 0;
     for (std::string line; std::getline(std::cin, line);) {                
         unsigned long start_row, end_row, partition_size, column;
@@ -83,8 +83,8 @@ void Orchestrator::process_commands(){
                  operation) = this->parse_command(line);        
         this->add_task(start_row, end_row, 
                        partition_size, column, 
-                       operation, command_id);
+                       operation, command_id);        
         command_id ++;
-    }
+    }    
     this->tasks_queue.close();  
 }

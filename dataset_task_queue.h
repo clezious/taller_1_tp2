@@ -13,8 +13,7 @@ private:
     std::condition_variable condition_variable;
     bool open;
 public:
-    DatasetTaskQueue();
-    bool empty();
+    DatasetTaskQueue();    
     void close();
     void push(DatasetTask task);
     DatasetTask pop();

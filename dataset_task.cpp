@@ -1,6 +1,7 @@
 #include <string>
 #include "dataset_task.h"
 #include "dataset_task_results.h"
+#include <iostream>
 
 DatasetTask::DatasetTask(DatasetTaskResults& results,
                          unsigned long command_id,                         

@@ -11,7 +11,7 @@ class DatasetTask{
         Dataset dataset;
         unsigned long command_id; 
         unsigned long column; 
-        std::string operation;
+        const std::string operation;
     public:
         DatasetTask(DatasetTaskResults& results,
                     unsigned long command_id,                    

@@ -17,7 +17,7 @@ void Orchestrator::add_task(unsigned long start_row,
                             unsigned long end_row, 
                             unsigned long partition_size, 
                             unsigned long column,
-                            std::string& operation,
+                            const std::string& operation,
                             long command_id){
     for (unsigned long partition_start = start_row;
             partition_start < end_row;

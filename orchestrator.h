@@ -48,7 +48,7 @@ class Orchestrator{
                                 unsigned long end_row, 
                                 unsigned long partition_size, 
                                 unsigned long column,
-                                std::string& operation,
+                                const std::string& operation,
                                 long command_id);
         
         // Devuelve los parámetros que constituyen 
